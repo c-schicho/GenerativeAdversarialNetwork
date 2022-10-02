@@ -7,13 +7,15 @@ def get_dataloader(
         dataset: str,
         batch_size: int = 16,
         shuffle: bool = True,
-        num_workers: int = 4
+        num_workers: int = 4,
+        flatten: bool = False,
+        transform: Optional[Callable] = ToTensor()
 ) -> DataLoader:
     if dataset == "mnist":
-        dataset = MNISTDataset()
+        dataset = MNISTDataset(transform=transform, flatten=flatten)
 
     elif dataset == "pokemon":
-        dataset = PokemonImageDataset()
+        dataset = PokemonImageDataset(transform=transform, flatten=flatten)
 
     else:
         raise NotImplementedError("dataset does not exist")
