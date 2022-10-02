@@ -14,10 +14,11 @@ POKEMON_PATH = os.path.join(DATA_PATH, "pokemon")
 
 class CustomImageDataset(Dataset):
 
-    def __init__(self, path: str, transform: Optional[Callable] = None):
+    def __init__(self, path: str, transform: Optional[Callable], flatten: bool):
         super(CustomImageDataset, self).__init__()
         self.img_paths = sorted(glob.glob(os.path.join(path, "**", "*.png"), recursive=True))
         self.transform = transform
+        self.flatten = flatten
 
     def __len__(self):
         return len(self.img_paths)
@@ -26,20 +27,21 @@ class CustomImageDataset(Dataset):
         img = Image.open(self.img_paths[idx])
 
         if self.transform:
-            item = self.transform(img)
-        else:
-            item = img
+            img = self.transform(img)
 
-        return item
+        if self.flatten:
+            img = img.reshape(-1)
+
+        return img
 
 
 class MNISTDataset(CustomImageDataset):
 
-    def __init__(self, transform: Optional[Callable] = ToTensor):
-        super().__init__(MNIST_PATH, transform=transform)
+    def __init__(self, transform: Optional[Callable] = ToTensor(), flatten: bool = False):
+        super().__init__(MNIST_PATH, transform=transform, flatten=flatten)
 
 
 class PokemonImageDataset(CustomImageDataset):
 
-    def __init__(self, transform: Optional[Callable] = ToTensor):
-        super().__init__(POKEMON_PATH, transform=transform)
+    def __init__(self, transform: Optional[Callable] = ToTensor(), flatten: bool = False):
+        super().__init__(POKEMON_PATH, transform=transform, flatten=flatten)
