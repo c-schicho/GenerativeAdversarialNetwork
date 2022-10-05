@@ -17,28 +17,27 @@ def main(
         batch_size: int,
         epochs: int,
         l_rate: float,
-        generator_path: str = "models",
-        discriminator_path: str = "models",
-        tensorboard_path: str = "results/mnist_fnn_gan",
-        save_after_epochs: int = 20
+        generator_path: str = "models/mnist_gan",
+        discriminator_path: str = "models/mnist_gan",
+        tensorboard_path: str = "results/mnist_gan",
+        save_after_epochs: int = 20,
+        random_noise_dim: int = 100,
+        image_dim: int = 28 * 28
 ):
     os.makedirs(generator_path, exist_ok=True)
     os.makedirs(discriminator_path, exist_ok=True)
     os.makedirs(tensorboard_path, exist_ok=True)
 
-    generator_model_path = os.path.join(generator_path, "mnist_fnn_generator.pt")
-    discriminator_model_path = os.path.join(discriminator_path, "mnist_fnn_discriminator.pt")
-
-    random_noise_dim = 100
-    mnist_image_dim = 28 * 28
+    generator_model_path = os.path.join(generator_path, "mnist_generator.pt")
+    discriminator_model_path = os.path.join(discriminator_path, "mnist_discriminator.pt")
 
     transform = Compose([
         ToTensor(),
         Normalize(mean=.5, std=.5)
     ])
     dataloader = get_dataloader(dataset="mnist", batch_size=batch_size, transform=transform, flatten=True)
-    generator = FNNGenerator(in_dims=random_noise_dim, out_dims=mnist_image_dim)
-    discriminator = FNNDiscriminator(in_dims=mnist_image_dim)
+    generator = FNNGenerator(in_dims=random_noise_dim, out_dims=image_dim)
+    discriminator = FNNDiscriminator(in_dims=image_dim)
     generator_optimizer = Adam(generator.parameters(), lr=l_rate)
     discriminator_optimizer = Adam(discriminator.parameters(), lr=l_rate)
     loss_fun = BCELoss()
@@ -56,7 +55,7 @@ def main(
         generator.load(generator_model_path)
         discriminator.load(discriminator_model_path)
 
-    for epoch in range(epochs):
+    for epoch in range(1, epochs + 1):
         for data in tqdm(dataloader, total=len(dataloader), ncols=90, desc=f"Epoch {epoch}/{epochs}"):
             data_batch_size = data.size(dim=0)
             gan_trainer.train_discriminator(data, data_batch_size)
