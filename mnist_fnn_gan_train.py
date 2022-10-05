@@ -1,7 +1,6 @@
 import json
 from argparse import ArgumentParser
 
-import torch
 from torch.nn import BCELoss
 from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
@@ -9,8 +8,7 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from tqdm import tqdm
 
 from dataloader import get_dataloader
-from gan.discriminator import FNNDiscriminator
-from gan.generator import FNNGenerator
+from gan import FNNGenerator, FNNDiscriminator, Trainer
 
 
 def main(
@@ -24,18 +22,25 @@ def main(
 ):
     random_noise_dim = 100
     mnist_image_dim = 28 * 28
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     transform = Compose([
         ToTensor(),
         Normalize(mean=.5, std=.5)
     ])
     dataloader = get_dataloader(dataset="mnist", batch_size=batch_size, transform=transform, flatten=True)
-    generator = FNNGenerator(in_dims=random_noise_dim, out_dims=mnist_image_dim).to(device)
-    discriminator = FNNDiscriminator(in_dims=mnist_image_dim).to(device)
+    generator = FNNGenerator(in_dims=random_noise_dim, out_dims=mnist_image_dim)
+    discriminator = FNNDiscriminator(in_dims=mnist_image_dim)
     generator_optimizer = Adam(generator.parameters(), lr=l_rate)
     discriminator_optimizer = Adam(discriminator.parameters(), lr=l_rate)
     loss_fun = BCELoss()
+    gan_trainer = Trainer(
+        generator=generator,
+        discriminator=discriminator,
+        generator_optimizer=generator_optimizer,
+        discriminator_optimizer=discriminator_optimizer,
+        loss_fun=loss_fun,
+        z_dim=random_noise_dim
+    )
     writer = SummaryWriter(tensorboard_path)
 
     if load_model:
@@ -45,41 +50,25 @@ def main(
     for epoch in range(epochs):
         for data in tqdm(dataloader, total=len(dataloader), ncols=90, desc=f"Epoch {epoch}/{epochs}"):
             data_batch_size = data.size(dim=0)
+            gan_trainer.train_discriminator(data, data_batch_size)
+            gan_trainer.train_generator(data_batch_size)
 
-            # train discriminator
-            discriminator.zero_grad()
-
-            random_noise = torch.randn(data_batch_size, random_noise_dim).to(device)
-            fake_data = generator(random_noise)
-
-            real_data = data.to(device)
-            real_output = discriminator(real_data)
-            real_loss = loss_fun(real_output, torch.ones(data_batch_size, 1).to(device))
-
-            fake_output = discriminator(fake_data)
-            fake_loss = loss_fun(fake_output, torch.zeros(data_batch_size, 1).to(device))
-
-            discriminator_loss = real_loss + fake_loss
-            discriminator_loss.backward()
-            discriminator_optimizer.step()
-
-            # train generator
-            generator.zero_grad()
-
-            random_noise = torch.randn(data_batch_size, random_noise_dim).to(device)
-            fake_data = generator(random_noise)
-
-            fake_output = discriminator(fake_data)
-
-            generator_loss = loss_fun(fake_output, torch.ones(data_batch_size, 1).to(device))
-            generator_loss.backward()
-            generator_optimizer.step()
-
-        # write training stats to tensorboard
-        writer.add_scalar(tag="generator loss", scalar_value=generator_loss.cpu().item(), global_step=epoch)
-        writer.add_scalar(tag="discriminator loss", scalar_value=discriminator_loss.cpu().item(), global_step=epoch)
-        writer.add_images(tag="generated images", dataformats="NCHW",
-                          img_tensor=fake_data.cpu().view(data_batch_size, 1, 28, 28), global_step=epoch)
+        writer.add_scalar(
+            tag="generator loss",
+            scalar_value=gan_trainer.generator_loss.cpu().item(),
+            global_step=epoch
+        )
+        writer.add_scalar(
+            tag="discriminator loss",
+            scalar_value=gan_trainer.discriminator_loss.cpu().item(),
+            global_step=epoch
+        )
+        writer.add_images(
+            tag="generated images",
+            dataformats="NCHW",
+            img_tensor=gan_trainer.generate_fake_data(data_batch_size).cpu().view(data_batch_size, 1, 28, 28),
+            global_step=epoch
+        )
 
         if epoch % 20 == 0:
             generator.save(generator_path)
