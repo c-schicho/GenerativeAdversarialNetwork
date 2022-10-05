@@ -1,4 +1,5 @@
 import json
+import os
 from argparse import ArgumentParser
 
 from torch.nn import BCELoss
@@ -16,10 +17,18 @@ def main(
         batch_size: int,
         epochs: int,
         l_rate: float,
-        generator_path: str = "models/generator.pt",
-        discriminator_path: str = "models/discriminator.pt",
-        tensorboard_path: str = "results/mnist_fnn_gan"
+        generator_path: str = "models",
+        discriminator_path: str = "models",
+        tensorboard_path: str = "results/mnist_fnn_gan",
+        save_after_epochs: int = 20
 ):
+    os.makedirs(generator_path, exist_ok=True)
+    os.makedirs(discriminator_path, exist_ok=True)
+    os.makedirs(tensorboard_path, exist_ok=True)
+
+    generator_model_path = os.path.join(generator_path, "mnist_fnn_generator.pt")
+    discriminator_model_path = os.path.join(discriminator_path, "mnist_fnn_discriminator.pt")
+
     random_noise_dim = 100
     mnist_image_dim = 28 * 28
 
@@ -44,8 +53,8 @@ def main(
     writer = SummaryWriter(tensorboard_path)
 
     if load_model:
-        generator.load(generator_path)
-        discriminator.load(discriminator_path)
+        generator.load(generator_model_path)
+        discriminator.load(discriminator_model_path)
 
     for epoch in range(epochs):
         for data in tqdm(dataloader, total=len(dataloader), ncols=90, desc=f"Epoch {epoch}/{epochs}"):
@@ -70,9 +79,9 @@ def main(
             global_step=epoch
         )
 
-        if epoch % 20 == 0:
-            generator.save(generator_path)
-            discriminator.save(discriminator_path)
+        if epoch % save_after_epochs == 0:
+            generator.save(generator_model_path)
+            discriminator.save(discriminator_model_path)
 
 
 if __name__ == "__main__":

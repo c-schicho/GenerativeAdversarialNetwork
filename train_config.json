@@ -1,6 +1,6 @@
 {
   "load_model": false,
   "batch_size": 100,
-  "epochs": 200,
+  "epochs": 205,
   "l_rate": 0.0002
 }
