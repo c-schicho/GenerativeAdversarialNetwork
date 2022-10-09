@@ -25,7 +25,7 @@ def main(
     generator.to(device)
     generator.eval()
 
-    random_noise = torch.randn(number_images, random_noise_dim).to(device)
+    random_noise = torch.randn(number_images, random_noise_dim, device=device)
 
     image_width = int(math.sqrt(image_dim))
     images = generator(random_noise).cpu().view(number_images, 1, image_width, image_width)
