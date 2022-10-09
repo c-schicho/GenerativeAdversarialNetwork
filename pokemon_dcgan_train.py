@@ -5,8 +5,9 @@ from argparse import ArgumentParser
 from torch.nn import BCELoss
 from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.transforms import Compose, ToTensor, Normalize, Resize
+from torchvision.transforms import Compose, ToTensor, Normalize, Resize, RandomHorizontalFlip
 from tqdm import tqdm
+
 from dataloader import get_dataloader
 from dcgan import DCGANGenerator, DCGANDiscriminator, Trainer
 
@@ -32,8 +33,9 @@ def main(
 
     transform = Compose([
         ToTensor(),
+        Normalize(mean=(.5, .5, .5), std=(.5, .5, .5)),
         Resize(image_dim),
-        Normalize(mean=(.5, .5, .5), std=(.5, .5, .5))
+        RandomHorizontalFlip()
     ])
     dataloader = get_dataloader(dataset="pokemon", batch_size=batch_size, transform=transform)
     generator = DCGANGenerator(in_dims=random_noise_dim, out_dims=image_dim)
