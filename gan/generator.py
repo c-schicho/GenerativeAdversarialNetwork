@@ -8,11 +8,11 @@ class FNNGenerator(Module):
         super(FNNGenerator, self).__init__()
         self.generator = Sequential(
             Linear(in_dims, 256),
-            LeakyReLU(.2),
+            LeakyReLU(.2, inplace=True),
             Linear(256, 512),
-            LeakyReLU(.2),
+            LeakyReLU(.2, inplace=True),
             Linear(512, 1024),
-            LeakyReLU(.2),
+            LeakyReLU(.2, inplace=True),
             Linear(1024, out_dims),
             Tanh()
         )

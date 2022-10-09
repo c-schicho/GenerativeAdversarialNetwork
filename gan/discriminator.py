@@ -8,14 +8,14 @@ class FNNDiscriminator(Module):
         super(FNNDiscriminator, self).__init__()
         self.discriminator = Sequential(
             Linear(in_dims, 1024),
-            LeakyReLU(.2),
-            Dropout(.3),
+            LeakyReLU(.2, inplace=True),
+            Dropout(.3, inplace=True),
             Linear(1024, 512),
-            LeakyReLU(.2),
-            Dropout(.3),
+            LeakyReLU(.2, inplace=True),
+            Dropout(.3, inplace=True),
             Linear(512, 256),
-            LeakyReLU(.2),
-            Dropout(.3),
+            LeakyReLU(.2, inplace=True),
+            Dropout(.3, inplace=True),
             Linear(256, 1),
             Sigmoid()
         )

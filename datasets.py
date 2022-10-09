@@ -26,6 +26,9 @@ class CustomImageDataset(Dataset):
     def __getitem__(self, idx: int) -> Tensor:
         img = Image.open(self.img_paths[idx])
 
+        if img.mode == "RGBA":
+            img = img.convert("RGB")
+
         if self.transform:
             img = self.transform(img)
 
