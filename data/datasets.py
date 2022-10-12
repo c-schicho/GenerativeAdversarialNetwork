@@ -7,7 +7,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.transforms import ToTensor
 
-DATA_PATH = "data"
+DATA_PATH = "./data"
 MNIST_PATH = os.path.join(DATA_PATH, "mnist")
 POKEMON_PATH = os.path.join(DATA_PATH, "pokemon")
 

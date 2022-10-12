@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 
-from datasets import *
+from data.datasets import *
 
 
 def get_dataloader(

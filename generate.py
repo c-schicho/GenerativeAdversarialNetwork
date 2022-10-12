@@ -6,25 +6,34 @@ import torch
 from torchvision.utils import save_image
 
 from dcgan import DCGANGenerator
+from gan import FNNGenerator
 
 
 def main(
+        model: str,
         number_images: int,
-        generator_path: str = "models/pokemon_dcgan",
-        output_path: str = "images/pokemon_dcgan",
+        generator_path: str,
+        output_path: str,
         random_noise_dim: int = 100,
         image_dim: int = 64
 ):
-    os.makedirs(output_path, exist_ok=True)
+    assert model in ["gan", "dcgan"], "only gan and dcgan models are supported"
 
+    os.makedirs(output_path, exist_ok=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    generator = DCGANGenerator(in_dims=random_noise_dim, out_dims=image_dim)
-    generator.load(os.path.join(generator_path, "pokemon_generator.pt"))
+    if model == "dcgan":
+        generator = DCGANGenerator(in_dims=random_noise_dim, out_dims=image_dim)
+        generator.load(os.path.join(generator_path, "pokemon_generator.pt"))
+        random_noise = torch.randn(number_images, random_noise_dim, 1, 1, device=device)
+    else:
+        generator = FNNGenerator(in_dims=random_noise_dim, out_dims=image_dim)
+        generator.load(os.path.join(generator_path, "mnist_generator.pt"))
+        random_noise = torch.randn(number_images, random_noise_dim, device=device)
+
     generator.to(device)
     generator.eval()
 
-    random_noise = torch.randn(number_images, random_noise_dim, 1, 1, device=device)
     images = generator(random_noise)
 
     for idx, image in enumerate(images):
@@ -35,7 +44,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
         "--config",
-        default="generation_config.json",
+        default="generate_config.json",
         type=str,
         required=False,
         help="path to the config file"
