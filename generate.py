@@ -7,6 +7,7 @@ from torchvision.utils import save_image
 
 from dcgan import DCGANGenerator
 from gan import FNNGenerator
+from stylegan import StyleGANGenerator
 
 
 def main(
@@ -17,20 +18,22 @@ def main(
         random_noise_dim: int = 100,
         image_dim: int = 64
 ):
-    assert model in ["gan", "dcgan"], "only gan and dcgan models are supported"
+    assert model in ["gan", "dcgan", "stylegan"], "only gan, dcgan and stylegan models are supported"
 
     os.makedirs(output_path, exist_ok=True)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    if model == "dcgan":
+    if model == "stylegan":
+        generator = StyleGANGenerator()
+        random_noise = None
+    elif model == "dcgan":
         generator = DCGANGenerator(in_dims=random_noise_dim, out_dims=image_dim)
-        generator.load(os.path.join(generator_path, "pokemon_generator.pt"))
         random_noise = torch.randn(number_images, random_noise_dim, 1, 1, device=device)
     else:
         generator = FNNGenerator(in_dims=random_noise_dim, out_dims=image_dim)
-        generator.load(os.path.join(generator_path, "mnist_generator.pt"))
         random_noise = torch.randn(number_images, random_noise_dim, device=device)
 
+    generator.load(generator_path)
     generator.to(device)
     generator.eval()
 

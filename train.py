@@ -6,6 +6,7 @@ from torchvision.transforms import Compose, ToTensor, Normalize, Resize, RandomH
 from data import get_dataloader
 from dcgan import Trainer as DCGAN_Trainer
 from gan import Trainer as GAN_Trainer
+from stylegan import Trainer as StyleGAN_Trainer
 
 
 def main(
@@ -23,19 +24,28 @@ def main(
         image_dim: int = 64
 ):
     assert dataset in ["pokemon", "mnist"], "only pokemon and mnist datasets are supported"
-    assert model in ["gan", "dcgan"], "only gan and dcgan models are supported"
+    assert model in ["gan", "dcgan", "stylegan"], "only gan, dcgan and stylegan models are supported"
 
     if dataset == "pokemon":
-        assert model == "dcgan", "only dcgan is supported for the pokemon dataset"
+        assert model in ["dcgan", "stylegan"], "only dcgan and stylegan are supported for the pokemon dataset"
 
-        if model == "dcgan":
-            transform = Compose([
-                ToTensor(),
-                Normalize(mean=(.5, .5, .5), std=(.5, .5, .5)),
-                Resize(image_dim),
-                RandomHorizontalFlip()
-            ])
-            dataloader = get_dataloader(dataset=dataset, batch_size=batch_size, transform=transform)
+        transform = Compose([
+            ToTensor(),
+            Normalize(mean=(.5, .5, .5), std=(.5, .5, .5)),
+            Resize(image_dim),
+            RandomHorizontalFlip()
+        ])
+        dataloader = get_dataloader(dataset=dataset, batch_size=batch_size, transform=transform)
+
+        if model == "stylegan":
+            stylegan_trainer = StyleGAN_Trainer(
+
+            )
+            stylegan_trainer.train(
+
+            )
+
+        elif model == "dcgan":
             dcgan_trainer = DCGAN_Trainer(
                 l_rate=l_rate,
                 z_dim=random_noise_dim,
