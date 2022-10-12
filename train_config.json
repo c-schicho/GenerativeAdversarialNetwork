@@ -1,6 +1,11 @@
 {
+  "dataset": "pokemon",
+  "model": "dcgan",
   "load_model": false,
   "batch_size": 16,
   "epochs": 200,
-  "l_rate": 0.0002
+  "l_rate": 0.0002,
+  "generator_path": "models/pokemon_dcgan",
+  "discriminator_path": "models/pokemon_dcgan",
+  "tensorboard_path": "results/pokemon_dcgan"
 }

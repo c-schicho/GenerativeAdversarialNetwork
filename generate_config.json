@@ -1,0 +1,6 @@
+{
+  "model": "dcgan",
+  "number_images": 20,
+  "generator_path": "models/pokemon_dcgan",
+  "output_path": "images/pokemon_dcgan"
+}
